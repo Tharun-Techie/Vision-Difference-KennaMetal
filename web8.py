@@ -131,7 +131,7 @@ def batch_process():
     st.success("Batch Processing Complete! Reports saved in 'Report Folder'.")
 
 # Streamlit UI
-st.title("🔍 Image Comparison Tool")
+st.title("🔍 3D Image Analysis Tool")
 mode = st.sidebar.radio("Select Mode", ("Single Comparison", "Batch Processing"))
 
 if mode == "Single Comparison":
