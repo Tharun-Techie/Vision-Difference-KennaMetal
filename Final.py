@@ -1,11 +1,11 @@
-import os
 import cv2
-import numpy as np
-import streamlit as st
-from PIL import Image
-from fpdf import FPDF
-import shutil
 from datetime import datetime
+from fpdf import FPDF
+import numpy as np
+import os
+from PIL import Image
+import streamlit as st
+import shutil
 import requests
 
 # Set page configuration
