@@ -7,6 +7,9 @@ from PIL import Image
 import streamlit as st
 import shutil
 import requests
+import uuid
+
+
 
 # Set page configuration
 st.set_page_config(
@@ -496,10 +499,11 @@ def select_directory():
     
     # Add option to select a custom directory
     subdirs.append("Custom Directory...")
-    
+    unique_key = str(uuid.uuid4())
+    selected_dir = st.selectbox("Select directory", subdirs, key=unique_key)
     # Let user select directory
     # selected_dir = st.selectbox("Select directory", subdirs)
-    selected_dir = st.selectbox("Select directory", subdirs, key="select_directory_1")
+    #selected_dir = st.selectbox("Select directory", subdirs, key="select_directory_1")
 
     
     if selected_dir == "Custom Directory...":
