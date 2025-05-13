@@ -498,9 +498,7 @@ def select_directory():
     subdirs.append("Custom Directory...")
     
     # Let user select directory
-    # selected_dir = st.selectbox("Select directory", subdirs)
-    selected_dir = st.selectbox("Select directory", subdirs, key="select_directory_1")
-
+    selected_dir = st.selectbox("Select directory", subdirs)
     
     if selected_dir == "Custom Directory...":
         # User can input a custom path
