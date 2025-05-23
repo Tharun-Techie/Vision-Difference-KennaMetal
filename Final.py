@@ -494,13 +494,12 @@ def apply_visualization(original, corrupt, mode="standard", threshold_value=30):
         
         return overlay, None, f"Changes Detected: {change_percentage:.2f}%", change_percentage
     
-# Function to select a directory using tkinter
 def select_directory():
     """Open a file dialog to select a directory"""
-    def select_directory():
-        if not TKINTER_AVAILABLE:
-            st.error("File browser not available in cloud deployment. Please enter path manually.")
-            return None
+    if not TKINTER_AVAILABLE:
+        st.error("File browser not available in cloud deployment. Please use Single Comparison mode instead.")
+        return None
+    
     try:
         # Create a root window and hide it
         root = tk.Tk()
@@ -521,6 +520,8 @@ def select_directory():
     except Exception as e:
         st.error(f"Error opening folder dialog: {e}")
         return None
+
+
 
 # Download and save logo for use in the app
 def download_logo():
@@ -544,6 +545,11 @@ def download_logo():
     else:
         return logo_path
     
+def check_environment():
+    """Check if the application is running in a supported environment for batch processing"""
+    return TKINTER_AVAILABLE
+
+
 def main():
     st.title("🔍 3D CAD Analysis Difference Detector")
     
@@ -560,8 +566,14 @@ def main():
     else:
         st.sidebar.image("https://via.placeholder.com/150x50.png?text=3D+Analyzer", use_container_width=True)
     
-    # Mode selection
-    mode = st.sidebar.radio("Select Mode", ("Single Comparison", "Batch Processing", "Settings"))
+    # Mode selection - Modified to disable batch processing when tkinter is not available
+    if TKINTER_AVAILABLE:
+        mode_options = ("Single Comparison", "Batch Processing", "Settings")
+    else:
+        mode_options = ("Single Comparison", "Settings")
+        st.sidebar.warning("⚠️ Batch Processing disabled: File browser not available in cloud deployment")
+    
+    mode = st.sidebar.radio("Select Mode", mode_options)
     
     if mode == "Single Comparison":
         st.sidebar.header("Upload Images")
@@ -659,6 +671,25 @@ def main():
                 st.error("Failed to process images. Please check the uploaded files.")
                 
     elif mode == "Batch Processing":
+                # Check if tkinter is available for batch processing
+        if not TKINTER_AVAILABLE:
+            st.error("❌ Batch Processing Not Available")
+            st.warning("""
+            Batch processing requires file system access that is not available in cloud deployments.
+            
+            **Alternative Options:**
+            1. Use **Single Comparison** mode to process images one by one
+            2. Download and run this application locally with Python to enable batch processing
+            3. Use the drag-and-drop functionality in Single Comparison mode
+            """)
+            
+            st.info("""
+            **To enable batch processing:**
+            - Install Python locally
+            - Install required packages: `pip install streamlit opencv-python fpdf2 pillow numpy requests`
+            - Run locally: `streamlit run your_app.py`
+            """)
+            return  # Exit the batch processing mode
         st.subheader("Batch Image Processing")
         
         # Instructions
@@ -672,85 +703,7 @@ def main():
         st.subheader("Select Directories")
         
         col1, col2 = st.columns(2)
-        
-        # with col1:
-        #     st.write("**Approved Images Directory**")
-        #     approved_dir_default = "Approved Images"
-        #     use_default_approved = st.checkbox("Use default directory for approved images", value=True)
-            
-        #     if use_default_approved:
-        #         approved_dir = approved_dir_default
-        #         st.info(f"Using default directory: {approved_dir}")
-        #     else:
-        #         approved_dir = select_directory()
-        #         if approved_dir:
-        #             st.success(f"Selected directory: {approved_dir}")
-        #         else:
-        #             st.warning("Please select a valid directory")
-        
-        # with col2:
-        #     st.write("**Corrupt Images Directory**")
-        #     corrupt_dir_default = "Corrupt Images"
-        #     use_default_corrupt = st.checkbox("Use default directory for corrupt images", value=True)
-            
-        #     if use_default_corrupt:
-        #         corrupt_dir = corrupt_dir_default
-        #         st.info(f"Using default directory: {corrupt_dir}")
-        #     else:
-        #         corrupt_dir = select_directory()
-        #         if corrupt_dir:
-        #             st.success(f"Selected directory: {corrupt_dir}")
-        #         else:
-        #             st.warning("Please select a valid directory")
-        # Initialize session state for directory paths
-        # if 'approved_dir' not in st.session_state:
-        #     st.session_state.approved_dir = "Approved Images"
-        # if 'corrupt_dir' not in st.session_state:
-        #     st.session_state.corrupt_dir = "Corrupt Images"
-
-        # with col1:
-        #     st.write("**Approved Images Directory**")
-        #     use_default_approved = st.checkbox("Use default directory for approved images", value=True, key="use_default_approved")
-            
-        #     if use_default_approved:
-        #         st.session_state.approved_dir = "Approved Images"
-        #         st.info(f"Using default directory: {st.session_state.approved_dir}")
-        #     else:
-        #         col1_btn, col1_info = st.columns([1, 2])
-        #         if col1_btn.button("📁 Browse Folder", key="browse_approved"):
-        #             selected_dir = select_directory()
-        #             if selected_dir:
-        #                 st.session_state.approved_dir = selected_dir
-        #                 st.rerun()
-                
-        #         if st.session_state.approved_dir and os.path.isdir(st.session_state.approved_dir):
-        #             col1_info.success(f"Selected: {os.path.basename(st.session_state.approved_dir)}")
-        #             st.info(f"Full path: {st.session_state.approved_dir}")
-        #         else:
-        #             col1_info.warning("No valid directory selected")
-
-        # with col2:
-        #     st.write("**Corrupt Images Directory**")
-        #     use_default_corrupt = st.checkbox("Use default directory for corrupt images", value=True, key="use_default_corrupt")
-            
-        #     if use_default_corrupt:
-        #         st.session_state.corrupt_dir = "Corrupt Images"
-        #         st.info(f"Using default directory: {st.session_state.corrupt_dir}")
-        #     else:
-        #         col2_btn, col2_info = st.columns([1, 2])
-        #         if col2_btn.button("📁 Browse Folder", key="browse_corrupt"):
-        #             selected_dir = select_directory()
-        #             if selected_dir:
-        #                 st.session_state.corrupt_dir = selected_dir
-        #                 st.rerun()
-                
-        #         if st.session_state.corrupt_dir and os.path.isdir(st.session_state.corrupt_dir):
-        #             col2_info.success(f"Selected: {os.path.basename(st.session_state.corrupt_dir)}")
-        #             st.info(f"Full path: {st.session_state.corrupt_dir}")
-        #         else:
-        #             col2_info.warning("No valid directory selected")
-        
-        
+               
         # Initialize session state for directory paths
         if 'approved_dir' not in st.session_state:
             st.session_state.approved_dir = None
@@ -877,6 +830,31 @@ def main():
                 with st.spinner("Clearing directories..."):
                     clear_folders(dirs_to_clear)
                     st.success(f"Cleared: {', '.join(dirs_to_clear)}")
+                
+        # Environment information
+        st.write("### Environment Information")
+        env_col1, env_col2 = st.columns(2)
+        
+        with env_col1:
+            st.write("**Current Environment:**")
+            if TKINTER_AVAILABLE:
+                st.success("✅ Desktop/Local Environment")
+                st.info("All features available")
+            else:
+                st.warning("☁️ Cloud Deployment")
+                st.info("Batch processing disabled")
+        
+        with env_col2:
+            st.write("**Available Features:**")
+            st.write("✅ Single Comparison")
+            st.write("✅ PDF Report Generation")
+            st.write("✅ Image Enhancement")
+            if TKINTER_AVAILABLE:
+                st.write("✅ Batch Processing")
+                st.write("✅ Custom Directory Selection")
+            else:
+                st.write("❌ Batch Processing")
+                st.write("❌ Custom Directory Selection")
         
         # About section
         st.write("### About")
@@ -896,6 +874,762 @@ def main():
         - Image enhancement options
         - Difference highlighting and heatmaps
         """)
+
+
+def select_directory():
+    """Open a file dialog to select a directory with enhanced error handling"""
+    if not TKINTER_AVAILABLE:
+        st.error("🚫 File Browser Not Available")
+        st.warning("""
+        **Directory selection is not available in cloud deployments.**
+        
+        **Alternative Solutions:**
+        1. Use **Single Comparison** mode to process images individually
+        2. Run this application locally to enable full batch processing
+        3. Upload images directly using the file uploader in Single Comparison mode
+        
+        **To enable directory selection:**
+        - Download and run this application on your local machine
+        - Install Python and required packages locally
+        """)
+        return None
+    
+    try:
+        # Create a root window and hide it
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        # Open folder selection dialog
+        folder_path = filedialog.askdirectory(
+            title="Select Directory containing images",
+            initialdir=os.getcwd()
+        )
+        
+        # Destroy the root window
+        root.destroy()
+        
+        if folder_path:
+            # Validate that the selected directory exists and contains image files
+            if not os.path.exists(folder_path):
+                st.error(f"Selected directory does not exist: {folder_path}")
+                return None
+            
+            # Check if directory contains any image files
+            image_extensions = ('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp')
+            image_files = [f for f in os.listdir(folder_path) 
+                          if f.lower().endswith(image_extensions)]
+            
+            if not image_files:
+                st.warning(f"No image files found in selected directory: {folder_path}")
+                st.info("Supported formats: PNG, JPG, JPEG, TIF, TIFF, BMP")
+            
+            return folder_path
+        else:
+            st.info("No directory selected")
+            return None
+        
+    except Exception as e:
+        st.error(f"Error opening folder dialog: {e}")
+        st.info("Please try again or use Single Comparison mode instead.")
+        return None
+
+
+def check_environment():
+    """Enhanced environment check with detailed feature availability"""
+    environment_info = {
+        'tkinter_available': TKINTER_AVAILABLE,
+        'deployment_type': 'Local/Desktop' if TKINTER_AVAILABLE else 'Cloud/Web',
+        'batch_processing': TKINTER_AVAILABLE,
+        'directory_selection': TKINTER_AVAILABLE,
+        'single_comparison': True,
+        'pdf_reports': True,
+        'image_enhancement': True
+    }
+    
+    return environment_info
+
+
+def display_environment_status():
+    """Display current environment status and feature availability"""
+    env_info = check_environment()
+    
+    # Create status indicator
+    if env_info['tkinter_available']:
+        st.sidebar.success("🖥️ Desktop Environment")
+        st.sidebar.caption("All features available")
+    else:
+        st.sidebar.warning("☁️ Cloud Environment")
+        st.sidebar.caption("Limited features - see Settings for details")
+    
+    return env_info
+
+
+def enhanced_batch_processing_guard():
+    """Enhanced guard function for batch processing with detailed alternatives"""
+    if not TKINTER_AVAILABLE:
+        st.error("❌ Batch Processing Not Available in Cloud Environment")
+        
+        st.markdown("""
+        ### 🔧 **Why is Batch Processing Disabled?**
+        Batch processing requires file system access and directory browsing capabilities 
+        that are not available in cloud/web deployments for security reasons.
+        
+        ### 🎯 **Available Alternatives:**
+        """)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            **📋 Option 1: Single Comparison Mode**
+            - Process images one by one
+            - Upload files directly
+            - Generate individual reports
+            - All analysis features available
+            """)
+            
+            if st.button("🔄 Switch to Single Comparison", key="switch_single"):
+                st.session_state.mode_override = "Single Comparison"
+                st.rerun()
+        
+        with col2:
+            st.markdown("""
+            **💻 Option 2: Local Installation**
+            - Download the application
+            - Run on your computer
+            - Full batch processing
+            - Custom directory selection
+            """)
+            
+            with st.expander("📖 Local Installation Instructions"):
+                st.code("""
+# Install Python 3.8 or higher, then:
+pip install streamlit opencv-python fpdf2 pillow numpy requests
+
+# Download this script and run:
+streamlit run image_analyzer.py
+                """, language="bash")
+        
+        st.markdown("""
+        ### 📊 **Feature Comparison:**
+        
+        | Feature | Cloud Environment | Local Environment |
+        |---------|-------------------|-------------------|
+        | Single Image Comparison | ✅ Available | ✅ Available |
+        | PDF Report Generation | ✅ Available | ✅ Available |
+        | Image Enhancement | ✅ Available | ✅ Available |
+        | Multiple Visualization Modes | ✅ Available | ✅ Available |
+        | Batch Processing | ❌ Disabled | ✅ Available |
+        | Custom Directory Selection | ❌ Disabled | ✅ Available |
+        | File Browser | ❌ Disabled | ✅ Available |
+        """)
+        
+        return False
+    
+    return True
+
+
+def enhanced_main():
+    """Enhanced main function with improved mode selection and environment handling"""
+    st.title("🔍 3d CAD Image Vision Difference Analysis")
+    
+    # Download and display logo in sidebar
+    logo_path = download_logo()
+    if logo_path:
+        logo_img = Image.open(logo_path)
+        logo_width = 150
+        ratio = logo_width / float(logo_img.size[0])
+        logo_height = int(float(logo_img.size[1]) * ratio)
+        resized_logo = logo_img.resize((logo_width, logo_height))
+        st.sidebar.image(resized_logo, use_container_width=False)
+    else:
+        st.sidebar.image("https://via.placeholder.com/150x50.png?text=3D+Analyzer", use_container_width=True)
+    
+    # Display environment status
+    env_info = display_environment_status()
+    
+    # Dynamic mode selection based on environment
+    base_modes = ["Single Comparison", "Settings"]
+    
+    if env_info['batch_processing']:
+        mode_options = ["Single Comparison", "Batch Processing", "Settings"]
+        st.sidebar.success("✅ All modes available")
+    else:
+        mode_options = base_modes
+        st.sidebar.warning("⚠️ Batch Processing disabled in cloud environment")
+        
+        with st.sidebar.expander("ℹ️ Why is Batch Processing disabled?"):
+            st.write("""
+            Cloud deployments restrict file system access for security. 
+            Use Single Comparison mode or run locally for batch processing.
+            """)
+    
+    # Handle mode override from session state
+    if 'mode_override' in st.session_state:
+        mode = st.session_state.mode_override
+        del st.session_state.mode_override
+    else:
+        mode = st.sidebar.radio("Select Mode", mode_options)
+    
+    # Mode-specific handling
+    if mode == "Single Comparison":
+        st.sidebar.header("Upload Images")
+        
+        # File uploaders
+        approved_image = st.sidebar.file_uploader("Upload Approved Image", type=["png", "jpg", "jpeg", "tif", "tiff"])
+        corrupt_image = st.sidebar.file_uploader("Upload Corrupt Image", type=["png", "jpg", "jpeg", "tif", "tiff"])
+        
+        # Advanced settings
+        st.sidebar.header("Analysis Settings")
+        threshold = st.sidebar.slider("Difference Threshold", 1, 100, 30, 
+                                    help="Lower values detect more subtle differences")
+        
+        vis_mode = st.sidebar.selectbox("Visualization Mode", 
+                                      ["standard", "side_by_side", "difference_only", "overlay"],
+                                      help="Choose how to visualize differences")
+        
+        # Enhancement options
+        st.sidebar.header("Image Enhancement")
+        with st.sidebar.expander("Enhancement Options"):
+            brightness = st.slider("Brightness", -50, 50, 0)
+            contrast = st.slider("Contrast", 0.5, 1.5, 1.0, 0.1)
+            sharpness = st.slider("Sharpness", 0.0, 2.0, 0.0, 0.1)
+            
+            apply_to = st.radio("Apply to:", ("None", "Approved Image", "Corrupt Image", "Both"))
+        
+        # Process the images if both are uploaded
+        if approved_image and corrupt_image:
+            # Save uploaded files
+            approved_path = save_uploaded_file(approved_image, "Approved Images")
+            corrupt_path = save_uploaded_file(corrupt_image, "Corrupt Images")
+            
+            # Load images
+            original = load_image(approved_path)
+            corrupt = load_image(corrupt_path)
+            
+            # Apply enhancements if selected
+            if apply_to in ["Approved Image", "Both"] and original is not None:
+                original = enhance_image(original, brightness, contrast, sharpness)
+            
+            if apply_to in ["Corrupt Image", "Both"] and corrupt is not None:
+                corrupt = enhance_image(corrupt, brightness, contrast, sharpness)
+            
+            # Process images with selected visualization mode
+            output, diff_heatmap, change_info, change_percentage = apply_visualization(original, corrupt, vis_mode, threshold)
+            
+            if output is not None:
+                # Display the original images and output
+                if vis_mode == "standard":
+                    col1, col2, col3 = st.columns(3)
+                    col1.image(original, caption="✅ Approved Image", use_container_width=True)
+                    col2.image(corrupt, caption="⚠️ Corrupt Image", use_container_width=True)
+                    col3.image(output, caption=f"🔴 {change_info}", use_container_width=True)
+                    
+                    # Display heatmap in an expander with same size as other images
+                    with st.expander("View Difference Heatmap"):
+                        # Create a container with same column layout to maintain consistent image size
+                        heatmap_col1, heatmap_col2, heatmap_col3 = st.columns(3)
+                        # Use the middle column to center the heatmap
+                        heatmap_col2.image(diff_heatmap, caption="Difference Heatmap", use_container_width=True)
+                else:
+                    # For other visualization modes
+                    st.image(output, caption=f"{change_info}", use_container_width=True)
+                
+                # Analysis details
+                with st.expander("Analysis Details"):
+                    st.write(f"**Image Dimensions:** {original.shape[1]}x{original.shape[0]} pixels")
+                    st.write(f"**Total Pixels:** {original.shape[0] * original.shape[1]}")
+                    st.write(f"**Changed Pixels:** {int(change_percentage * original.shape[0] * original.shape[1] / 100)}")
+                    st.write(f"**Change Percentage:** {change_percentage:.4f}%")
+                    
+                    if change_percentage < 0.01:
+                        st.success("The images are identical or have negligible differences.")
+                    elif change_percentage < 1:
+                        st.info("The images have minor differences.")
+                    else:
+                        st.warning("The images have significant differences.")
+                
+                # Generate report button
+                if st.button("📄 Generate Report"):
+                    with st.spinner("Generating report..."):
+                        output_path = os.path.join("Output Images", approved_image.name)
+                        cv2.imwrite(output_path, output)
+                        
+                        report_path = os.path.join("Report Folder", f"{os.path.splitext(approved_image.name)[0]}_report.pdf")
+                        # Use the same images that are displayed on screen for the report
+                        report_file = generate_pdf(original, corrupt, output, diff_heatmap if diff_heatmap is not None else output, 
+                                                 report_path, change_percentage, approved_image.name)
+                        
+                        if report_file:
+                            with open(report_file, "rb") as file:
+                                st.download_button("📥 Download Report", file, file_name=f"{os.path.splitext(approved_image.name)[0]}_report.pdf", 
+                                                mime="application/pdf")
+            else:
+                st.error("Failed to process images. Please check the uploaded files.")
+    elif mode == "Batch Processing":
+        if enhanced_batch_processing_guard():
+            handle_batch_processing_mode()
+    elif mode == "Settings":
+        handle_settings_mode(env_info)
+
+
+def handle_batch_processing_mode():
+    """Enhanced batch processing mode with better directory management"""
+    st.subheader("📦 Batch Image Processing")
+    
+    # Enhanced instructions
+    st.markdown("""
+    ### 📋 **How Batch Processing Works:**
+    1. **Select Directories**: Choose folders containing your approved and corrupt images
+    2. **Automatic Matching**: Files with identical names will be compared automatically
+    3. **Bulk Processing**: All matched pairs will be processed simultaneously
+    4. **Report Generation**: Individual PDF reports created for each comparison
+    
+    ### 📁 **Directory Requirements:**
+    - Both directories should contain images with **identical filenames**
+    - Supported formats: PNG, JPG, JPEG, TIF, TIFF, BMP
+    - Images will be automatically resized if dimensions don't match
+    """)
+    
+    # Directory selection with enhanced UI
+    st.subheader("📂 Select Image Directories")
+    
+    # Initialize session state for directory paths
+    if 'approved_dir' not in st.session_state:
+        st.session_state.approved_dir = None
+    if 'corrupt_dir' not in st.session_state:
+        st.session_state.corrupt_dir = None
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🟢 Approved Images Directory**")
+        
+        if st.button("📁 Browse for Approved Images", key="browse_approved", use_container_width=True):
+            selected_dir = select_directory()
+            if selected_dir:
+                st.session_state.approved_dir = selected_dir
+                st.rerun()
+        
+        if st.session_state.approved_dir and os.path.isdir(st.session_state.approved_dir):
+            st.success(f"✅ Selected: {os.path.basename(st.session_state.approved_dir)}")
+            st.caption(f"📍 Path: {st.session_state.approved_dir}")
+            
+            # Show file count
+            image_extensions = ('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp')
+            image_files = [f for f in os.listdir(st.session_state.approved_dir) 
+                          if f.lower().endswith(image_extensions)]
+            st.info(f"📊 Found {len(image_files)} image files")
+            
+            if st.button("❌ Clear Selection", key="clear_approved"):
+                st.session_state.approved_dir = None
+                st.rerun()
+        else:
+            st.info("👆 Click above to select approved images folder")
+    
+    with col2:
+        st.markdown("**🔴 Corrupt Images Directory**")
+        
+        if st.button("📁 Browse for Corrupt Images", key="browse_corrupt", use_container_width=True):
+            selected_dir = select_directory()
+            if selected_dir:
+                st.session_state.corrupt_dir = selected_dir
+                st.rerun()
+        
+        if st.session_state.corrupt_dir and os.path.isdir(st.session_state.corrupt_dir):
+            st.success(f"✅ Selected: {os.path.basename(st.session_state.corrupt_dir)}")
+            st.caption(f"📍 Path: {st.session_state.corrupt_dir}")
+            
+            # Show file count
+            image_extensions = ('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp')
+            image_files = [f for f in os.listdir(st.session_state.corrupt_dir) 
+                          if f.lower().endswith(image_extensions)]
+            st.info(f"📊 Found {len(image_files)} image files")
+            
+            if st.button("❌ Clear Selection", key="clear_corrupt"):
+                st.session_state.corrupt_dir = None
+                st.rerun()
+        else:
+            st.info("👆 Click above to select corrupt images folder")
+    
+    # Validate and show matching files
+    if st.session_state.approved_dir and st.session_state.corrupt_dir:
+        # Find matching files
+        approved_files = set(os.listdir(st.session_state.approved_dir))
+        corrupt_files = set(os.listdir(st.session_state.corrupt_dir))
+        matching_files = approved_files.intersection(corrupt_files)
+        
+        # Filter for image files only
+        image_extensions = ('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp')
+        matching_images = [f for f in matching_files if f.lower().endswith(image_extensions)]
+        
+        if matching_images:
+            st.success(f"🎯 Found {len(matching_images)} matching image pairs ready for processing")
+            
+            with st.expander(f"📋 View {len(matching_images)} Matching Files"):
+                for i, filename in enumerate(sorted(matching_images), 1):
+                    st.write(f"{i}. {filename}")
+        else:
+            st.error("❌ No matching image files found between the two directories")
+            st.info("💡 Ensure both directories contain images with identical filenames")
+    
+    # Processing controls
+    st.subheader("⚙️ Processing Settings")
+    
+    col_settings1, col_settings2 = st.columns(2)
+    
+    with col_settings1:
+        threshold = st.slider(
+            "🎚️ Difference Threshold", 
+            min_value=1, max_value=100, value=30,
+            help="Lower values detect more subtle differences. Higher values focus on major changes."
+        )
+    
+    with col_settings2:
+        st.markdown("**📊 Threshold Guide:**")
+        st.caption("• 1-10: Very sensitive (detects minor differences)")
+        st.caption("• 11-30: Balanced (recommended)")
+        st.caption("• 31-50: Less sensitive (major differences only)")
+        st.caption("• 51-100: Very tolerant (obvious differences only)")
+    
+    # Processing buttons
+    st.subheader("🚀 Execute Batch Processing")
+    
+    process_col1, process_col2, process_col3 = st.columns(3)
+    
+    with process_col1:
+        start_processing = st.button(
+            "🚀 Start Batch Processing", 
+            disabled=not (st.session_state.approved_dir and st.session_state.corrupt_dir),
+            use_container_width=True
+        )
+    
+    with process_col2:
+        clear_outputs = st.button("🗑️ Clear Output Folders", use_container_width=True)
+    
+    with process_col3:
+        if st.button("📊 View Processing History", use_container_width=True):
+            st.session_state.show_history = True
+    
+    # Execute batch processing
+    if start_processing:
+        if not st.session_state.approved_dir or not st.session_state.corrupt_dir:
+            st.error("❌ Please select both approved and corrupt image directories")
+        elif not os.path.isdir(st.session_state.approved_dir) or not os.path.isdir(st.session_state.corrupt_dir):
+            st.error("❌ One or both selected directories do not exist")
+        else:
+            with st.spinner("🔄 Processing images... This may take a few moments."):
+                summary = batch_process(st.session_state.approved_dir, st.session_state.corrupt_dir, threshold)
+                
+                if summary:
+                    st.success(f"✅ Batch processing completed! {len(summary)} files processed successfully.")
+                    
+                    # Enhanced summary display
+                    st.subheader("📈 Processing Summary")
+                    
+                    # Create summary statistics
+                    total_files = len(summary)
+                    avg_change = sum(item["change_percentage"] for item in summary) / total_files
+                    max_change = max(item["change_percentage"] for item in summary)
+                    min_change = min(item["change_percentage"] for item in summary)
+                    
+                    # Display statistics
+                    stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+                    stat_col1.metric("Total Files", total_files)
+                    stat_col2.metric("Average Change", f"{avg_change:.2f}%")
+                    stat_col3.metric("Maximum Change", f"{max_change:.2f}%")
+                    stat_col4.metric("Minimum Change", f"{min_change:.2f}%")
+                    
+                    # Detailed summary table
+                    summary_data = {
+                        "Filename": [item["filename"] for item in summary],
+                        "Change Percentage": [f"{item['change_percentage']:.2f}%" for item in summary],
+                        "Status": [
+                            "✅ Identical" if item['change_percentage'] < 0.01 
+                            else "⚠️ Minor Changes" if item['change_percentage'] < 1 
+                            else "🔴 Major Changes" 
+                            for item in summary
+                        ]
+                    }
+                    st.dataframe(summary_data, use_container_width=True)
+                else:
+                    st.error("❌ Batch processing failed. Please check your image files and try again.")
+    
+    # Clear output folders
+    if clear_outputs:
+        with st.spinner("🗑️ Clearing output folders..."):
+            clear_folders()
+            st.success("✅ Output folders cleared successfully.")
+    
+    # Display available reports
+    st.subheader("📂 Generated Reports")
+    display_available_reports()
+
+
+def handle_settings_mode(env_info):
+    """Enhanced settings mode with comprehensive environment information"""
+    st.subheader("⚙️ Application Settings & Information")
+    
+    # Environment Information Section
+    st.markdown("### 🌐 Environment Information")
+    
+    env_col1, env_col2 = st.columns(2)
+    
+    with env_col1:
+        st.markdown("**📋 Current Environment:**")
+        if env_info['tkinter_available']:
+            st.success("🖥️ Desktop/Local Environment Detected")
+            st.markdown("""
+            **✅ Full Functionality Available**
+            - All features are operational
+            - No restrictions on file access
+            - Optimal performance expected
+            """)
+        else:
+            st.warning("☁️ Cloud/Web Environment Detected")
+            st.markdown("""
+            **⚠️ Limited Functionality**
+            - Some features are restricted for security
+            - File system access is limited
+            - Network-based deployment
+            """)
+    
+    with env_col2:
+        st.markdown("**🔧 Feature Availability:**")
+        
+        features = [
+            ("Single Image Comparison", env_info['single_comparison']),
+            ("PDF Report Generation", env_info['pdf_reports']),
+            ("Image Enhancement Tools", env_info['image_enhancement']),
+            ("Batch Processing", env_info['batch_processing']),
+            ("Custom Directory Selection", env_info['directory_selection']),
+        ]
+        
+        for feature, available in features:
+            icon = "✅" if available else "❌"
+            status = "Available" if available else "Disabled"
+            st.markdown(f"{icon} **{feature}**: {status}")
+    
+    # Deployment Recommendations
+    st.markdown("### 💡 Recommendations")
+    
+    if not env_info['tkinter_available']:
+        st.warning("""
+        **🚀 For Full Functionality:**
+        
+        Consider running this application locally to unlock all features:
+        
+        1. **Download the application** to your computer
+        2. **Install Python 3.8+** and required packages
+        3. **Run locally** using `streamlit run app.py`
+        
+        **Benefits of Local Deployment:**
+        - Batch processing capabilities
+        - Custom directory selection
+        - Faster processing (no network overhead)
+        - Full file system access
+        - Enhanced security for sensitive images
+        """)
+        
+        with st.expander("📖 Detailed Installation Guide"):
+            st.markdown("""
+            **Step-by-Step Local Installation:**
+            
+            ```bash
+            # 1. Install Python (if not already installed)
+            # Download from: https://python.org
+            
+            # 2. Install required packages
+            pip install streamlit opencv-python fpdf2 pillow numpy requests
+            
+            # 3. Save the application code to a file (e.g., image_analyzer.py)
+            
+            # 4. Run the application
+            streamlit run image_analyzer.py
+            
+            # 5. Access via browser at: http://localhost:8501
+            ```
+            
+            **System Requirements:**
+            - Python 3.8 or higher
+            - 4GB RAM minimum (8GB recommended for large images)
+            - Windows, macOS, or Linux
+            - Modern web browser
+            """)
+    else:
+        st.success("""
+        **🎉 Congratulations!**
+        
+        You're running the application locally with full functionality enabled.
+        All features are available and you can process images efficiently.
+        """)
+    
+    # Directory Management Section
+    st.markdown("### 📁 Directory Management")
+    
+    with st.expander("📂 View Directory Contents"):
+        dir_to_view = st.selectbox(
+            "Select Directory to Inspect", 
+            ["Approved Images", "Corrupt Images", "Output Images", "Report Folder", "Temp"],
+            help="View the contents of application directories"
+        )
+        
+        if dir_to_view:
+            try:
+                files = os.listdir(dir_to_view)
+                if files:
+                    st.markdown(f"**📋 Files in {dir_to_view} ({len(files)} items):**")
+                    
+                    # Categorize files by type
+                    images = [f for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp'))]
+                    pdfs = [f for f in files if f.lower().endswith('.pdf')]
+                    others = [f for f in files if f not in images and f not in pdfs]
+                    
+                    if images:
+                        st.markdown("**🖼️ Image Files:**")
+                        for img in sorted(images):
+                            st.text(f"  📷 {img}")
+                    
+                    if pdfs:
+                        st.markdown("**📄 PDF Reports:**")
+                        for pdf in sorted(pdfs):
+                            st.text(f"  📋 {pdf}")
+                    
+                    if others:
+                        st.markdown("**📄 Other Files:**")
+                        for other in sorted(others):
+                            st.text(f"  📄 {other}")
+                else:
+                    st.info(f"📭 No files found in {dir_to_view}")
+            except Exception as e:
+                st.error(f"❌ Error accessing directory: {e}")
+    
+    # Cleanup Operations
+    with st.expander("🧹 Cleanup Operations"):
+        st.markdown("**⚠️ Warning:** These operations will permanently delete files.")
+        
+        dirs_to_clear = st.multiselect(
+            "Select directories to clear", 
+            ["Output Images", "Report Folder", "Approved Images", "Corrupt Images", "Temp"],
+            help="Choose which directories to clear. Use caution with input directories."
+        )
+        
+        if dirs_to_clear:
+            # Show what will be deleted
+            st.markdown("**🗑️ Files to be deleted:**")
+            total_files = 0
+            for dir_name in dirs_to_clear:
+                try:
+                    files = os.listdir(dir_name)
+                    total_files += len(files)
+                    st.text(f"📁 {dir_name}: {len(files)} files")
+                except:
+                    st.text(f"📁 {dir_name}: Error accessing directory")
+            
+            if total_files > 0:
+                st.warning(f"⚠️ This will delete {total_files} files total!")
+                
+                if st.button("🗑️ Confirm Deletion", type="secondary"):
+                    with st.spinner("🧹 Clearing directories..."):
+                        clear_folders(dirs_to_clear)
+                        st.success(f"✅ Successfully cleared: {', '.join(dirs_to_clear)}")
+            else:
+                st.info("✨ Selected directories are already empty")
+    
+    # Application Information
+    st.markdown("### ℹ️ Application Information")
+    
+    info_col1, info_col2 = st.columns(2)
+    
+    with info_col1:
+        st.markdown("""
+        **📋 Application Details:**
+        - **Name:** 3D CAD Image Analysis Tool
+        - **Version:** 2.0.0 Enhanced
+        - **Purpose:** Compare and analyze 3D model images
+        - **Developer:** Enhanced for Production Use
+        """)
+    
+    with info_col2:
+        st.markdown("""
+        **🔧 Technical Specifications:**
+        - **Framework:** Streamlit + OpenCV
+        - **Image Processing:** Computer Vision algorithms
+        - **Report Format:** PDF with embedded images
+        - **Supported Formats:** PNG, JPG, JPEG, TIF, TIFF, BMP
+        """)
+    
+    st.markdown("""
+    **✨ Key Features:**
+    - **Advanced Image Comparison** using computer vision algorithms
+    - **Multiple Visualization Modes** including heatmaps and overlays
+    - **Comprehensive PDF Reports** with company branding
+    - **Batch Processing** for multiple image pairs (local environments)
+    - **Image Enhancement Tools** for preprocessing
+    - **Flexible Threshold Settings** for sensitivity control
+    - **Cross-Platform Compatibility** (Windows, macOS, Linux)
+    """)
+
+
+def display_available_reports():
+    """Enhanced function to display and manage available reports"""
+    reports_dir = "Report Folder"
+    
+    try:
+        reports = [f for f in os.listdir(reports_dir) if f.endswith('.pdf')]
+        
+        if reports:
+            # Sort reports by creation time (newest first)
+            reports.sort(
+                key=lambda x: os.path.getctime(os.path.join(reports_dir, x)), 
+                reverse=True
+            )
+            
+            st.success(f"📊 Found {len(reports)} reports")
+            
+            # Display reports in a more organized way
+            for i, report in enumerate(reports):
+                report_path = os.path.join(reports_dir, report)
+                
+                # Get file info
+                file_size = os.path.getsize(report_path)
+                file_size_mb = file_size / (1024 * 1024)
+                creation_time = os.path.getctime(report_path)
+                creation_date = datetime.fromtimestamp(creation_time).strftime('%Y-%m-%d %H:%M:%S')
+                
+                # Create columns for report info and download button
+                col_info, col_download = st.columns([3, 1])
+                
+                with col_info:
+                    st.markdown(f"""
+                    **📋 {report}**
+                    - 📅 Created: {creation_date}
+                    - 📊 Size: {file_size_mb:.2f} MB
+                    """)
+                
+                with col_download:
+                    with open(report_path, "rb") as file:
+                        st.download_button(
+                            "📥 Download", 
+                            file, 
+                            file_name=report, 
+                            mime="application/pdf",
+                            key=f"download_{i}"
+                        )
+                
+                st.divider()
+        else:
+            st.info("📭 No reports available yet. Process some images to generate reports!")
+            
+    except Exception as e:
+        st.error(f"❌ Error accessing reports directory: {e}")
+
+
+# Update the main function call to use the enhanced version
+def main():
+    """Main function - use the enhanced version"""
+    enhanced_main()
 
 # Run the application
 if __name__ == "__main__":
