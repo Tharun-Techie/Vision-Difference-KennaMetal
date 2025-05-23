@@ -8,9 +8,6 @@ import streamlit as st
 import shutil
 import requests
 import uuid
-import tkinter as tk
-from tkinter import filedialog
-
 
 try:
     import tkinter as tk
