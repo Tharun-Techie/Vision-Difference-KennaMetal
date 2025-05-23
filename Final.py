@@ -8,6 +8,8 @@ import streamlit as st
 import shutil
 import requests
 import uuid
+import tkinter as tk
+from tkinter import filedialog
 
 
 
@@ -116,7 +118,7 @@ def generate_pdf(original, corrupt, output, diff_heatmap, report_path, change_pe
     # Add logo to the top right
     temp_logo_path = os.path.join("Temp", "logo.jpg")
     
-    # Download and save logo if it doesn't exist
+    # Download KennaMetal Logo and save logo if it doesn't exist
     if not os.path.exists(temp_logo_path):
         try:
             logo_url = "https://mma.prnewswire.com/media/2129550/4843326/Kennametal_Logo.jpg?p=distribution"
@@ -488,36 +490,30 @@ def apply_visualization(original, corrupt, mode="standard", threshold_value=30):
         change_percentage = (changed_pixels / total_pixels) * 100
         
         return overlay, None, f"Changes Detected: {change_percentage:.2f}%", change_percentage
-
-# Function to select directory
+    
+# Function to select a directory using tkinter
 def select_directory():
-    # Get current working directory
-    cwd = os.getcwd()
-    
-    # List subdirectories in the current directory
-    subdirs = [d for d in os.listdir(cwd) if os.path.isdir(os.path.join(cwd, d))]
-    
-    # Add option to select a custom directory
-    subdirs.append("Custom Directory...")
-    unique_key = str(uuid.uuid4())
-    selected_dir = st.selectbox("Select directory", subdirs, key=unique_key)
-    # Let user select directory
-    # selected_dir = st.selectbox("Select directory", subdirs)
-    #selected_dir = st.selectbox("Select directory", subdirs, key="select_directory_1")
-
-    
-    if selected_dir == "Custom Directory...":
-        # User can input a custom path
-        custom_path = st.text_input("Enter custom directory path")
-        if custom_path and os.path.isdir(custom_path):
-            return custom_path
-        elif custom_path:
-            st.error("Invalid directory path")
-            return None
-        else:
-            return None
-    else:
-        return os.path.join(cwd, selected_dir)
+    """Open a file dialog to select a directory"""
+    try:
+        # Create a root window and hide it
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        # Open folder selection dialog
+        folder_path = filedialog.askdirectory(
+            title="Select Directory",
+            initialdir=os.getcwd()
+        )
+        
+        # Destroy the root window
+        root.destroy()
+        
+        return folder_path if folder_path else None
+        
+    except Exception as e:
+        st.error(f"Error opening folder dialog: {e}")
+        return None
 
 # Download and save logo for use in the app
 def download_logo():
@@ -670,35 +666,129 @@ def main():
         
         col1, col2 = st.columns(2)
         
+        # with col1:
+        #     st.write("**Approved Images Directory**")
+        #     approved_dir_default = "Approved Images"
+        #     use_default_approved = st.checkbox("Use default directory for approved images", value=True)
+            
+        #     if use_default_approved:
+        #         approved_dir = approved_dir_default
+        #         st.info(f"Using default directory: {approved_dir}")
+        #     else:
+        #         approved_dir = select_directory()
+        #         if approved_dir:
+        #             st.success(f"Selected directory: {approved_dir}")
+        #         else:
+        #             st.warning("Please select a valid directory")
+        
+        # with col2:
+        #     st.write("**Corrupt Images Directory**")
+        #     corrupt_dir_default = "Corrupt Images"
+        #     use_default_corrupt = st.checkbox("Use default directory for corrupt images", value=True)
+            
+        #     if use_default_corrupt:
+        #         corrupt_dir = corrupt_dir_default
+        #         st.info(f"Using default directory: {corrupt_dir}")
+        #     else:
+        #         corrupt_dir = select_directory()
+        #         if corrupt_dir:
+        #             st.success(f"Selected directory: {corrupt_dir}")
+        #         else:
+        #             st.warning("Please select a valid directory")
+        # Initialize session state for directory paths
+        # if 'approved_dir' not in st.session_state:
+        #     st.session_state.approved_dir = "Approved Images"
+        # if 'corrupt_dir' not in st.session_state:
+        #     st.session_state.corrupt_dir = "Corrupt Images"
+
+        # with col1:
+        #     st.write("**Approved Images Directory**")
+        #     use_default_approved = st.checkbox("Use default directory for approved images", value=True, key="use_default_approved")
+            
+        #     if use_default_approved:
+        #         st.session_state.approved_dir = "Approved Images"
+        #         st.info(f"Using default directory: {st.session_state.approved_dir}")
+        #     else:
+        #         col1_btn, col1_info = st.columns([1, 2])
+        #         if col1_btn.button("📁 Browse Folder", key="browse_approved"):
+        #             selected_dir = select_directory()
+        #             if selected_dir:
+        #                 st.session_state.approved_dir = selected_dir
+        #                 st.rerun()
+                
+        #         if st.session_state.approved_dir and os.path.isdir(st.session_state.approved_dir):
+        #             col1_info.success(f"Selected: {os.path.basename(st.session_state.approved_dir)}")
+        #             st.info(f"Full path: {st.session_state.approved_dir}")
+        #         else:
+        #             col1_info.warning("No valid directory selected")
+
+        # with col2:
+        #     st.write("**Corrupt Images Directory**")
+        #     use_default_corrupt = st.checkbox("Use default directory for corrupt images", value=True, key="use_default_corrupt")
+            
+        #     if use_default_corrupt:
+        #         st.session_state.corrupt_dir = "Corrupt Images"
+        #         st.info(f"Using default directory: {st.session_state.corrupt_dir}")
+        #     else:
+        #         col2_btn, col2_info = st.columns([1, 2])
+        #         if col2_btn.button("📁 Browse Folder", key="browse_corrupt"):
+        #             selected_dir = select_directory()
+        #             if selected_dir:
+        #                 st.session_state.corrupt_dir = selected_dir
+        #                 st.rerun()
+                
+        #         if st.session_state.corrupt_dir and os.path.isdir(st.session_state.corrupt_dir):
+        #             col2_info.success(f"Selected: {os.path.basename(st.session_state.corrupt_dir)}")
+        #             st.info(f"Full path: {st.session_state.corrupt_dir}")
+        #         else:
+        #             col2_info.warning("No valid directory selected")
+        
+        
+        # Initialize session state for directory paths
+        if 'approved_dir' not in st.session_state:
+            st.session_state.approved_dir = None
+        if 'corrupt_dir' not in st.session_state:
+            st.session_state.corrupt_dir = None
+
         with col1:
             st.write("**Approved Images Directory**")
-            approved_dir_default = "Approved Images"
-            use_default_approved = st.checkbox("Use default directory for approved images", value=True)
             
-            if use_default_approved:
-                approved_dir = approved_dir_default
-                st.info(f"Using default directory: {approved_dir}")
+            col1_btn, col1_info = st.columns([1, 2])
+            if col1_btn.button("📁 Browse Approved Folder", key="browse_approved"):
+                selected_dir = select_directory()
+                if selected_dir:
+                    st.session_state.approved_dir = selected_dir
+                    st.rerun()
+            
+            if st.session_state.approved_dir and os.path.isdir(st.session_state.approved_dir):
+                col1_info.success(f"✅ {os.path.basename(st.session_state.approved_dir)}")
+                st.info(f"Path: {st.session_state.approved_dir}")
             else:
-                approved_dir = select_directory()
-                if approved_dir:
-                    st.success(f"Selected directory: {approved_dir}")
-                else:
-                    st.warning("Please select a valid directory")
-        
+                col1_info.info("Click to select folder")
+
         with col2:
             st.write("**Corrupt Images Directory**")
-            corrupt_dir_default = "Corrupt Images"
-            use_default_corrupt = st.checkbox("Use default directory for corrupt images", value=True)
             
-            if use_default_corrupt:
-                corrupt_dir = corrupt_dir_default
-                st.info(f"Using default directory: {corrupt_dir}")
+            col2_btn, col2_info = st.columns([1, 2])
+            if col2_btn.button("📁 Browse Corrupt Folder", key="browse_corrupt"):
+                selected_dir = select_directory()
+                if selected_dir:
+                    st.session_state.corrupt_dir = selected_dir
+                    st.rerun()
+            
+            if st.session_state.corrupt_dir and os.path.isdir(st.session_state.corrupt_dir):
+                col2_info.success(f"✅ {os.path.basename(st.session_state.corrupt_dir)}")
+                st.info(f"Path: {st.session_state.corrupt_dir}")
             else:
-                corrupt_dir = select_directory()
-                if corrupt_dir:
-                    st.success(f"Selected directory: {corrupt_dir}")
-                else:
-                    st.warning("Please select a valid directory")
+                col2_info.info("Click to select folder")
+
+        # Set the directory variables for the rest of the function
+        approved_dir = st.session_state.approved_dir
+        corrupt_dir = st.session_state.corrupt_dir
+
+        # Set the directory variables for the rest of the function
+        approved_dir = st.session_state.approved_dir
+        corrupt_dir = st.session_state.corrupt_dir
         
         # Advanced settings for batch mode
         st.sidebar.header("Batch Settings")
