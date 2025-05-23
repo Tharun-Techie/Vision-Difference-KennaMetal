@@ -12,7 +12,13 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-
+try:
+    import tkinter as tk
+    from tkinter import filedialog
+    TKINTER_AVAILABLE = True
+except ImportError:
+    TKINTER_AVAILABLE = False
+    
 # Set page configuration
 st.set_page_config(
     page_title="3d CAD Image Vision Difference Analysis ",
@@ -494,6 +500,10 @@ def apply_visualization(original, corrupt, mode="standard", threshold_value=30):
 # Function to select a directory using tkinter
 def select_directory():
     """Open a file dialog to select a directory"""
+    def select_directory():
+        if not TKINTER_AVAILABLE:
+            st.error("File browser not available in cloud deployment. Please enter path manually.")
+            return None
     try:
         # Create a root window and hide it
         root = tk.Tk()
